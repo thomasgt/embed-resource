@@ -1,50 +1,54 @@
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 
-using namespace std;
-using namespace boost::filesystem;
+int main(int argc, char* argv[]) {
+  if (argc < 3) {
+    std::cerr << "USAGE: " << argv[0] << " {sym} {rsrc}" << std::endl
+              << std::endl
+              << "  Creates {sym}.c from the contents of {rsrc}" << std::endl;
+    return EXIT_FAILURE;
+  }
 
-int main(int argc, char** argv)
-{
-    if (argc < 3) {
-        fprintf(stderr, "USAGE: %s {sym} {rsrc}\n\n"
-                        "  Creates {sym}.c from the contents of {rsrc}\n",
-                argv[0]);
-        return EXIT_FAILURE;
+  boost::filesystem::path dst{argv[1]};
+  boost::filesystem::path src{argv[2]};
+
+  std::string sym = src.filename().string();
+  std::replace(sym.begin(), sym.end(), '.', '_');
+  std::replace(sym.begin(), sym.end(), '-', '_');
+
+  boost::filesystem::create_directories(dst.parent_path());
+
+  std::ofstream ofs(dst.generic_string());
+
+  ofs << "#include <stdlib.h>" << std::endl;
+  ofs << "const unsigned char _resource_" << sym << "[] = {" << std::endl;
+
+  std::ifstream ifs(src.generic_string(), std::ios::binary);
+  ifs.unsetf(std::ios::skipws);
+
+  constexpr size_t buffer_size = 10;
+  while (!ifs.eof()) {
+    // Read the data
+    char buffer[buffer_size];
+    ifs.read(buffer, buffer_size);
+    if (ifs.gcount()) {
+      // Indent the line
+      ofs << "  ";
+      // Print the data
+      for (int i = 0; i < ifs.gcount(); ++i) {
+        ofs << "0x" << std::setfill('0') << std::setw(2) << std::hex
+            << (0xff & buffer[i]) << ", ";
+      }
+      ofs << std::endl;
     }
+  }
 
-    path dst{argv[1]};
-    path src{argv[2]};
+  ofs << "};" << std::endl;
+  ofs << "const size_t _resource_" << sym << "_len = sizeof(_resource_" << sym
+      << ");" << std::endl;
 
-    string sym = src.filename().string();
-    replace(sym.begin(), sym.end(), '.', '_');
-    replace(sym.begin(), sym.end(), '-', '_');
-
-    create_directories(dst.parent_path());
-
-    boost::filesystem::ofstream ofs{dst};
-
-    boost::filesystem::ifstream ifs{src};
-
-    ofs << "#include <stdlib.h>" << endl;
-    ofs << "const char _resource_" << sym << "[] = {" << endl;
-
-    size_t lineCount = 0;
-    while (!ifs.eof())
-    {
-        char c;
-        ifs.get(c);
-        ofs << "0x" << hex << (c&0xff) << ", ";
-        if (++lineCount == 10) {
-            ofs << endl;
-            lineCount = 0;
-        }
-    }
-
-
-    ofs << "};" << endl;
-    ofs << "const size_t _resource_" << sym << "_len = sizeof(_resource_" << sym << ");";
-
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
