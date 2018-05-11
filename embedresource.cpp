@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
   if (argc < 3) {
     std::cerr << "USAGE: " << argv[0] << " {sym} {rsrc}" << std::endl
               << std::endl
-              << "  Creates {sym}.c from the contents of {rsrc}" << std::endl;
+              << "  Creates {sym}.cpp from the contents of {rsrc}" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -23,8 +23,8 @@ int main(int argc, char* argv[]) {
 
   std::ofstream ofs(dst.generic_string());
 
-  ofs << "#include <stdlib.h>" << std::endl;
-  ofs << "const unsigned char _resource_" << sym << "[] = {" << std::endl;
+  ofs << "#include <cstdlib>" << std::endl << std::endl;
+  ofs << "extern const unsigned char _resource_" << sym << "[] = {" << std::endl;
 
   std::ifstream ifs(src.generic_string(), std::ios::binary);
   ifs.unsetf(std::ios::skipws);
@@ -46,9 +46,9 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  ofs << "};" << std::endl;
-  ofs << "const size_t _resource_" << sym << "_len = sizeof(_resource_" << sym
-      << ");" << std::endl;
+  ofs << "};" << std::endl << std::endl;
+  ofs << "extern const size_t _resource_" << sym << "_len = sizeof(_resource_" << sym
+      << ");" << std::endl << std::endl;
 
   return EXIT_SUCCESS;
 }

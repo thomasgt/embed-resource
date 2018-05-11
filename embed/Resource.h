@@ -32,9 +32,9 @@ private:
 
 }  // namespace embed
 
-#define LOAD_RESOURCE(RESOURCE)                                        \
-  ([]() {                                                              \
-    extern const unsigned char _resource_##RESOURCE[];                 \
-    extern const size_t _resource_##RESOURCE##_len;                    \
-    return Resource(_resource_##RESOURCE, _resource_##RESOURCE##_len); \
+#define LOAD_RESOURCE(RESOURCE) \
+  ([]() { \
+    extern const unsigned char _resource_##RESOURCE[]; \
+    extern const size_t _resource_##RESOURCE##_len; \
+    return embed::Resource(_resource_##RESOURCE, _resource_##RESOURCE##_len); \
   })()
